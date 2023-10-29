@@ -1,0 +1,50 @@
+name: Docker Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  checkout:
+    name: Checkout
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+  docker_clean:
+    name: Docker Clean
+    runs-on: [self-hosted, linux]
+    needs: checkout
+    steps:
+      - name: Stop
+        run: sudo docker stop server-container ailearn-ai-container task-api-container
+      - name: Remove
+        run: sudo docker rm  server-container ailearn-ai-container task-api-container
+      - name: Remove
+        run: sudo docker rmi server ailearn-ai task-api
+
+  docker:
+    name: Docker Build and Run
+    runs-on: [self-hosted, linux]
+    needs: docker_clean
+    steps:
+      - name: Build
+        run: sudo docker build -t ailearn-ai -f ./ailearn-ai/Dockerfile .
+      - name: Run
+        run: sudo docker run -d -p 10002:10002 --name ailearn-ai-container ailearn-ai
+      - name: Copy Env
+        run: sudo docker cp /home/ubuntu/env/ailearn-ai/.env ailearn-ai-container:/app/ailearn-ai/.env
+      - name: Build
+        run: sudo docker build -t task-api -f ./task-api/Dockerfile .
+      - name: Run
+        run: sudo docker run -d -p 10003:10003 --name task-api-container task-api
+      - name: Copy Env
+        run: sudo docker cp /home/ubuntu/env/task-api/.env task-api-container:/app/task-api/.env
+      - name: Build
+        run: sudo docker build -t server -f ./server/Dockerfile .
+      - name: Run
+        run: sudo docker run -d -p 10000:10000 --name server-container server
+      - name: Copy Env
+        run: sudo docker cp /home/ubuntu/env/server/.env server-container:/app/server/.env
+      

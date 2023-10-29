@@ -1,0 +1,11 @@
+{
+  "apps" : [
+    {
+      "name": "ailearn-ai",
+      "interpreter": "/bin/bash",
+      "script": "launch.bash",
+      "out_file": "/var/log/ailearn-ai.log",
+      "error_file": "/var/log/ailearn-ai.err",
+    }
+  ]
+}
